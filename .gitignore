@@ -1,3 +1,4 @@
 .venv/
 .idea/
 logfile.txt
+.env

