@@ -2,3 +2,4 @@
 .idea/
 logfile.txt
 .env
+__pycache__/
