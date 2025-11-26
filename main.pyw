@@ -197,30 +197,29 @@ def clipboard_monitor(interval=5):
 
         time.sleep(interval)
 
+def is_same_window(window1, window2):
+    if window1 == window2:
+        return True
+
+    ignore_patterns = [' - Прокрутка', ' - Scroll', '...', ' — ']
+
+    if window1 and window2:
+        base1 = window1[:20]
+        base2 = window2[:20]
+        if base1 == base2:
+            return True
+
+        for pattern in ignore_patterns:
+            if pattern in window1 and pattern in window2:
+                return True
+
+    return False
 
 def screenshot_monitor(interval=120):
     count = 0
     last_window = ""
     last_screenshot_time = 0
     last_clipboard_content = ""
-
-    def is_same_window(window1, window2):
-        if window1 == window2:
-            return True
-
-        ignore_patterns = [' - Прокрутка', ' - Scroll', '...', ' — ']
-
-        if window1 and window2:
-            base1 = window1[:20]
-            base2 = window2[:20]
-            if base1 == base2:
-                return True
-
-            for pattern in ignore_patterns:
-                if pattern in window1 and pattern in window2:
-                    return True
-
-        return False
 
     while True:
         try:
